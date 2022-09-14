@@ -140,12 +140,15 @@ public class StudentMap implements Map<Student, Integer> {
         }
         else {
             Node currentNode = buckets[bucketIndex];
-            do{
+            if (currentNode.getKey().equals(key)){
+                return rewriteEntry(currentNode, value);
+            }
+            while (currentNode.next != null){
                 if (currentNode.getKey().equals(key)){
                     return rewriteEntry(currentNode, value);
                 }
                 currentNode = currentNode.next;
-            } while (currentNode.next != null);
+            }
             currentNode.setNext(newNode);
         }
         ++size;
@@ -160,6 +163,7 @@ public class StudentMap implements Map<Student, Integer> {
 
     private void rehash(){
         Node[] oldBuckets = buckets;
+        size = 0;
         buckets = new Node[buckets.length * 2];
 
         for (Node node : oldBuckets) {

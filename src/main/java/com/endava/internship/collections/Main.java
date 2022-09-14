@@ -34,11 +34,12 @@ public class Main {
         System.out.println(studentMap.keySet());
         System.out.println(studentMap.values());
 
-        for(int i =0; i<20; ++i){
+        for(int i =0; i<200; ++i){
             Student student = new Student((""+i), LocalDate.now(), "");
             studentMap.put(student, i);
         }
         System.out.println(studentMap.entrySet());
+        System.out.println(studentMap.size());
 
     }
 
