@@ -77,16 +77,29 @@ public class StudentMap implements Map<Student, Integer> {
 
     @Override
     public boolean containsKey(Object key) {
-        return get(key) != null;
+        if (key == null || key instanceof Student){
+            for (Node currentNode : buckets) {
+                if (currentNode != null){
+                    do{
+                        if (Objects.equals(currentNode.getKey(), key)){
+                            return true;
+                        }
+                        currentNode = currentNode.next;
+                    } while (currentNode != null && currentNode.next != null);
+                }
+            }
+            return false;
+        }
+        throw new IllegalArgumentException("Key is not instance of Integer: " + key);
     }
 
     @Override
     public boolean containsValue(Object value) {
-        if (value instanceof Integer){
+        if (value == null || value instanceof Integer){
             for (Node currentNode : buckets) {
                 if (currentNode != null){
                     do{
-                        if (currentNode.getValue().equals(value)){
+                        if (Objects.equals(currentNode.getValue(), value)){
                             return true;
                         }
                         currentNode = currentNode.next;
@@ -100,7 +113,7 @@ public class StudentMap implements Map<Student, Integer> {
 
     @Override
     public Integer get(Object key) {
-        if (key instanceof Student){
+        if (key == null || key instanceof Student){
             int bucketIndex = hashIndex((Student) key);
             return getFromBucket((Student) key, bucketIndex);
         }
@@ -110,7 +123,7 @@ public class StudentMap implements Map<Student, Integer> {
     private Integer getFromBucket(Student key, int bucketIndex){
         Node currentNode = buckets[bucketIndex];
         while (currentNode != null){
-            if (currentNode.getKey().equals(key)){
+            if (Objects.equals(currentNode.getKey(), key)){
                 return currentNode.getValue();
             }
             currentNode = currentNode.next;
@@ -140,11 +153,11 @@ public class StudentMap implements Map<Student, Integer> {
         }
         else {
             Node currentNode = buckets[bucketIndex];
-            if (currentNode.getKey().equals(key)){
+            if (Objects.equals(currentNode.getKey(), key)){
                 return rewriteEntry(currentNode, value);
             }
             while (currentNode.next != null){
-                if (currentNode.getKey().equals(key)){
+                if (Objects.equals(currentNode.getKey(), key)){
                     return rewriteEntry(currentNode, value);
                 }
                 currentNode = currentNode.next;
@@ -176,7 +189,7 @@ public class StudentMap implements Map<Student, Integer> {
 
     @Override
     public Integer remove(Object key) {
-        if (key instanceof Student){
+        if (key == null || key instanceof Student){
             int bucketIndex = hashIndex((Student) key);
             return removeFromBucket((Student) key, bucketIndex);
         }
@@ -187,13 +200,13 @@ public class StudentMap implements Map<Student, Integer> {
     private Integer removeFromBucket(Student key, int bucketIndex){
         Node currentNode = buckets[bucketIndex];
         if (currentNode != null){
-            if (currentNode.getKey().equals(key)){
+            if (Objects.equals(currentNode.getKey(), key)){
                 buckets[bucketIndex] = currentNode.next;
                 --size;
                 return currentNode.getValue();
             }
             while (currentNode.next != null){
-                if (currentNode.next.getKey().equals(key)){
+                if (Objects.equals(currentNode.next.getKey(), key)){
                     Integer valueToDelete = currentNode.next.getValue();
                     currentNode.next = currentNode.next.next;
                     --size;
