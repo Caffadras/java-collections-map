@@ -2,67 +2,71 @@ package com.endava.internship.collections;
 
 import java.util.*;
 
-public class StudentMap implements Map<Student, Integer> {
-
+public class GenericMap<K, V> implements Map<K, V> {
     private static final int DEFAULT_INITIAL_CAPACITY = 16;
     private static final float DEFAULT_LOAD_FACTOR = 0.75f;
-    private Node[] buckets;
+    private GenericMap.Node<K, V>[] buckets;
     private int size = 0;
 
-    static class Node {
-        private final Student key;
-        private Integer value;
-        private Node next;
+    static class Node<K, V> {
+        private final K key;
+        private V value;
+        private GenericMap.Node<K, V> next;
 
-        public Node(Student key, Integer value) {
+        public Node(K key, V value) {
             this(key,  value, null);
         }
 
-        public Node(Student key, Integer value, Node next) {
+        public Node(K key, V value, GenericMap.Node<K, V> next) {
             this.key = key;
             this.value = value;
             this.next = next;
         }
 
-        public Student getKey() {
+        public K getKey() {
             return key;
         }
 
-        public Integer getValue() {
+        public V getValue() {
             return value;
         }
 
-        public void setValue(Integer value) {
+        public void setValue(V value) {
             this.value = value;
         }
 
-        public Node getNext() {
+        public Node<K, V> getNext() {
             return next;
         }
 
-        public void setNext(Node next) {
+        public void setNext(Node<K, V> next) {
             this.next = next;
         }
     }
 
-    public StudentMap() {
+    public GenericMap() {
         this(DEFAULT_INITIAL_CAPACITY);
     }
 
-    public StudentMap(int initialCapacity){
+    public GenericMap(int initialCapacity){
         if (initialCapacity < 0){
             throw new IllegalArgumentException("Illegal initial capacity: " + initialCapacity);
         }
 
         if (initialCapacity < DEFAULT_INITIAL_CAPACITY){
-            buckets = new Node[DEFAULT_INITIAL_CAPACITY];
+            buckets = createBucketArray(DEFAULT_INITIAL_CAPACITY);
         } else {
-            buckets = new Node[initialCapacity];
+            buckets = createBucketArray(initialCapacity);
         }
     }
 
-    private int hashIndex(Student key){
+    private int hashIndex(Object key){
         return key == null ? 0 : Math.abs(key.hashCode() % buckets.length);
+    }
+
+    @SuppressWarnings("unchecked")
+    private GenericMap.Node<K, V>[] createBucketArray(int length){
+        return (GenericMap.Node<K, V>[]) new GenericMap.Node[length];
     }
 
     @Override
@@ -77,64 +81,54 @@ public class StudentMap implements Map<Student, Integer> {
 
     @Override
     public boolean containsKey(Object key) {
-        if (key == null || key instanceof Student){
-            for (Node currentNode : buckets) {
-                while (currentNode != null){
-                    if (Objects.equals(currentNode.getKey(), key)){
-                        return true;
-                    }
-                    currentNode = currentNode.next;
+        for (GenericMap.Node<K, V> currentNode : buckets) {
+            while (currentNode != null){
+                if (Objects.equals(currentNode.getKey(), key)){
+                    return true;
                 }
+                currentNode = currentNode.next;
             }
-            return false;
         }
-        throw new IllegalArgumentException("Key is not instance of Integer: " + key);
+        return false;
     }
 
     @Override
     public boolean containsValue(Object value) {
-        if (value == null || value instanceof Integer){
-            for (Node currentNode : buckets) {
-                while (currentNode != null){
-                    if (Objects.equals(currentNode.getValue(), value)){
-                        return true;
-                    }
-                    currentNode = currentNode.next;
+        for (GenericMap.Node<K, V> currentNode : buckets) {
+            while (currentNode != null){
+                if (Objects.equals(currentNode.getValue(), value)){
+                    return true;
                 }
+                currentNode = currentNode.next;
             }
-            return false;
         }
-        throw new IllegalArgumentException("Value is not instance of Integer: " + value);
+        return false;
     }
 
     @Override
-    public Integer get(Object key) {
-        if (key == null || key instanceof Student){
-            int bucketIndex = hashIndex((Student) key);
-            return getFromBucket((Student) key, bucketIndex);
-        }
-        throw new IllegalArgumentException("Key is not instance of Student: " + key);
+    public V get(Object key) {
+        int bucketIndex = hashIndex(key);
+        return getFromBucket(key, bucketIndex);
     }
 
-    private Integer getFromBucket(Student key, int bucketIndex){
-        Node currentNode = buckets[bucketIndex];
+    private V getFromBucket(Object key, int bucketIndex){
+        GenericMap.Node<K, V> currentNode = buckets[bucketIndex];
         while (currentNode != null){
             if (Objects.equals(currentNode.getKey(), key)){
                 return currentNode.getValue();
             }
             currentNode = currentNode.next;
         }
-
         return null;
     }
 
     @Override
-    public Integer put(Student key, Integer value) {
+    public V put(K key, V value) {
         int bucketIndex = hashIndex(key);
         return putInBucket(key, value, bucketIndex);
     }
 
-    private Integer putInBucket(Student key, Integer value, int bucketIndex){
+    private V putInBucket(K key, V value, int bucketIndex){
         if (bucketIndex < 0 || bucketIndex > buckets.length){
             throw new IndexOutOfBoundsException("Bucket Index out of bounds: " + bucketIndex);
         }
@@ -143,12 +137,13 @@ public class StudentMap implements Map<Student, Integer> {
             rehash();
         }
 
-        Node newNode = new Node(key, value);
+        GenericMap.Node<K, V> newNode = new GenericMap.Node<>(key, value);
+
         if (buckets[bucketIndex] == null){
             buckets[bucketIndex] = newNode;
         }
         else {
-            Node currentNode = buckets[bucketIndex];
+            GenericMap.Node<K, V> currentNode = buckets[bucketIndex];
             if (Objects.equals(currentNode.getKey(), key)){
                 return rewriteEntry(currentNode, value);
             }
@@ -164,18 +159,18 @@ public class StudentMap implements Map<Student, Integer> {
         return null;
     }
 
-    private Integer rewriteEntry(Node node, Integer newValue){
-        Integer oldValue = node.getValue();
+    private V rewriteEntry(GenericMap.Node<K, V> node, V newValue){
+        V oldValue = node.getValue();
         node.setValue(newValue);
         return oldValue;
     }
 
     private void rehash(){
-        Node[] oldBuckets = buckets;
+        GenericMap.Node<K, V>[] oldBuckets = buckets;
         size = 0;
-        buckets = new Node[buckets.length * 2];
+        buckets = createBucketArray(buckets.length * 2);
 
-        for (Node node : oldBuckets) {
+        for (GenericMap.Node<K, V> node : oldBuckets) {
             while (node != null){
                 put(node.getKey(), node.getValue());
                 node = node.next;
@@ -184,17 +179,13 @@ public class StudentMap implements Map<Student, Integer> {
     }
 
     @Override
-    public Integer remove(Object key) {
-        if (key == null || key instanceof Student){
-            int bucketIndex = hashIndex((Student) key);
-            return removeFromBucket((Student) key, bucketIndex);
-        }
-
-        throw new IllegalArgumentException("Key is not instance of Student: " + key);
+    public V remove(Object key) {
+        int bucketIndex = hashIndex(key);
+        return removeFromBucket(key, bucketIndex);
     }
 
-    private Integer removeFromBucket(Student key, int bucketIndex){
-        Node currentNode = buckets[bucketIndex];
+    private V removeFromBucket(Object key, int bucketIndex){
+        GenericMap.Node<K, V> currentNode = buckets[bucketIndex];
         if (currentNode != null){
             if (Objects.equals(currentNode.getKey(), key)){
                 buckets[bucketIndex] = currentNode.next;
@@ -203,7 +194,7 @@ public class StudentMap implements Map<Student, Integer> {
             }
             while (currentNode.next != null){
                 if (Objects.equals(currentNode.next.getKey(), key)){
-                    Integer valueToDelete = currentNode.next.getValue();
+                    V valueToDelete = currentNode.next.getValue();
                     currentNode.next = currentNode.next.next;
                     --size;
                     return valueToDelete;
@@ -215,8 +206,8 @@ public class StudentMap implements Map<Student, Integer> {
     }
 
     @Override
-    public void putAll(Map<? extends Student, ? extends Integer> map) {
-        for (Map.Entry<? extends Student, ? extends Integer> entry : map.entrySet()) {
+    public void putAll(Map<? extends K, ? extends V> map) {
+        for (Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
             put(entry.getKey(), entry.getValue());
         }
     }
@@ -224,13 +215,13 @@ public class StudentMap implements Map<Student, Integer> {
     @Override
     public void clear() {
         size = 0;
-        buckets = new Node[DEFAULT_INITIAL_CAPACITY];
+        buckets = createBucketArray(DEFAULT_INITIAL_CAPACITY);
     }
 
     @Override
-    public Set<Student> keySet() {
-        Set<Student> keySet = new HashSet<>();
-        for (Node bucket : buckets) {
+    public Set<K> keySet() {
+        Set<K> keySet = new HashSet<>();
+        for (GenericMap.Node<K, V> bucket : buckets) {
             while (bucket != null){
                 keySet.add(bucket.getKey());
                 bucket = bucket.next;
@@ -240,9 +231,9 @@ public class StudentMap implements Map<Student, Integer> {
     }
 
     @Override
-    public Collection<Integer> values() {
-        Collection<Integer> values = new ArrayList<>();
-        for (Node bucket : buckets) {
+    public Collection<V> values() {
+        Collection<V> values = new ArrayList<>();
+        for (GenericMap.Node<K, V> bucket : buckets) {
             while (bucket != null){
                 values.add(bucket.getValue());
                 bucket = bucket.next;
@@ -252,9 +243,9 @@ public class StudentMap implements Map<Student, Integer> {
     }
 
     @Override
-    public Set<Map.Entry<Student, Integer>> entrySet() {
-        Set<Map.Entry<Student, Integer>> entrySet = new HashSet<>();
-        for (Node bucket : buckets) {
+    public Set<Map.Entry<K, V>> entrySet() {
+        Set<Map.Entry<K, V>> entrySet = new HashSet<>();
+        for (GenericMap.Node<K, V> bucket : buckets) {
             while (bucket != null){
                 entrySet.add(new AbstractMap.SimpleEntry<>(bucket.getKey(), bucket.getValue()));
                 bucket = bucket.next;
@@ -263,4 +254,3 @@ public class StudentMap implements Map<Student, Integer> {
         return entrySet;
     }
 }
-
