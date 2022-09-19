@@ -1,6 +1,12 @@
 package com.endava.internship.collections;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class GenericMap<K, V> implements Map<K, V> {
     private static final int DEFAULT_INITIAL_CAPACITY = 16;
